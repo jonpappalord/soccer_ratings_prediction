@@ -23,3 +23,5 @@ The project consist in 7 different folders:
     * **predictions_explanations**: Take as input all the seasons the user want to use (name in format for_the_model_201X_201Y.csv) and, since we need to make a real experiment, this notebook also required matches.json from season 2018-2019
 
 7. **experiment_csv_creation**: Combining the result of the predictions with the local motivations obtained from shap, I setup an experiment in which, for each of the 10 game selected as test set a comparison, some partecipant will give their opinion to each player that played the game in order to retrieve a comparision between human perception of perfomance and machine perception of performance. 
+    * **create_csv_for_forms_experiment**: Take as input the dataset obtained from prediction explanation in which there are the predictions for test set and their relative explanations, create for each pool a specific csv for treatment and recognition test.
+    * **experiment_result_analysis**: Take as input recognition.csv and treatment.csv, exploit the result with fancy visualizations.
