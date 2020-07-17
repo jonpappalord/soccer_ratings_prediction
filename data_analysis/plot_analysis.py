@@ -31,22 +31,26 @@ figsize = (6, 6)
 newspaper2style = {'gazzetta': {'color': '#d95f02'},
                    'tuttosport': {'color': '#7570b3'},
                    'corriere': {'color': '#1b9e77'},
-                   'fantagazzetta': {'color': '#98cdec'}}
+                   'fantagazzetta': {'color': '#48D3FB'}}
 
 newspaper2name = {'gazzetta': '$NP_1$',
                   'tuttosport': '$NP_3$',
                   'corriere': '$NP_2$',
-                  'fantagazzetta': '$NP_4$'}
+                  'fantagazzetta': '$NP_4$',
+                 'artificial': '$NP_5$',
+                 'human' : '$NP_6$'}
 
 newspaper2name = {'gazzetta': '$G$',
                   'tuttosport': '$T$',
                   'corriere': '$C$',
-                  'fantagazzetta': '$F$'}
+                  'fantagazzetta': '$F$',
+                 'human' : '$Human$',
+                 'artificial': '$AJ$'}
 
 mpl.figure.figsize = (6, 6)
 
 
-def plotGazzettaDistribution(ratings_g, ratings_c, ratings_t, ratings_f):
+def plotDistribution(ratings_g, name):
     '''
 
     :param ratings_g: Gazzetta dello sport list ratings
@@ -64,21 +68,21 @@ def plotGazzettaDistribution(ratings_g, ratings_c, ratings_t, ratings_f):
     ax = plt.axes()
 
     bins = list(np.arange(0, 10.5, 0.5))
-    plt.hist(ratings_g, bins=bins, density=True, rwidth=0.85,
-             linewidth=0, color=newspaper2style['gazzetta']['color'], label=newspaper2name['gazzetta'],
+    plt.hist(ratings_g, bins=bins, normed=True, rwidth=0.85,
+             linewidth=0, color=newspaper2style[name]['color'], label=newspaper2name[name],
              zorder=2, align='left')
 
     ## LABELS
-    plt.xlabel('ratings', fontsize=label_size)
+    plt.xlabel('%s ratings' %name, fontsize=label_size)
     plt.ylabel('p(ratings)', fontsize=label_size, labelpad=15)
     plt.xticks(list(np.arange(0, 10.5, 1.0)), fontsize=10)
     plt.xlim(0, 10)
 
     # take the min and max mark values, and compute avg and std
-    min_rating = min([min(ratings_g), min(ratings_c), min(ratings_t), min(ratings_f)])
-    max_rating = min([max(ratings_g), max(ratings_c), max(ratings_t), min(ratings_f)])
-    avg = ceil(np.mean(ratings_g + ratings_c + ratings_t + ratings_f))
-    std = ceil(np.std(ratings_g + ratings_c + ratings_t + ratings_f))
+    #min_rating = min([min(ratings_g), min(ratings_c), min(ratings_t), min(ratings_f)])
+    #max_rating = min([max(ratings_g), max(ratings_c), max(ratings_t), min(ratings_f)])
+    #avg = ceil(np.mean(ratings_g + ratings_c + ratings_t + ratings_f))
+    #std = ceil(np.std(ratings_g + ratings_c + ratings_t + ratings_f))
 
     ## SUFFICIENCY LINE
     plt.vlines(6, 0, 0.7, linewidth=2.5, color='k', linestyle='--', alpha=0.75, label='sufficiency', zorder=3)
@@ -92,20 +96,22 @@ def plotGazzettaDistribution(ratings_g, ratings_c, ratings_t, ratings_f):
             ax.xaxis.get_major_ticks()[i].label1.set_fontsize('25')
 
     ## FILL OUR OF MEAN +- STD
-    ax.fill_between([mean - std, mean + std], 0, 0.7, facecolor='k', alpha=0.10)
+    ax.fill_between([min(ratings_g), max(ratings_g)], 0, 0.8, facecolor='k', alpha=0.10)
+    ax.set_ylim(0,0.7)
 
     ## LEGEND
-    legend = plt.legend(loc=2, fontsize=20, frameon=True, shadow=True, handlelength=1.8, handletextpad=0.4)
+    legend = plt.legend(loc=2, fontsize=15, frameon=True, shadow=True, handlelength=1.6, handletextpad=0.4)
     # print legend.get_texts()[0].set_fontsize(20)
 
     ## ANNOTATE INFO
     plt.annotate('$\mu=%s$\n$\sigma=%s$' % (mean, std), xy=(0.8, 0.31), fontsize=25)
     plt.grid(alpha=0.60)
-
+    #plt.title('%s distribution' %name, fontsize=title_size)
+    
     fig.tight_layout()
-    plt.savefig('img/ratings_distr.pdf')
-    plt.savefig('img/ratings_distr.svg')
-    plt.savefig('img/ratings_distr.png')
+    plt.savefig('img/ratings_distr_%s.pdf' %name)
+    plt.savefig('img/ratings_distr_%s.svg' %name)
+    plt.savefig('img/ratings_distr_%s.png' %name)
     plt.show()
 
 
@@ -183,8 +189,8 @@ def plotBoxplotNewspaperDistribution(ratings_g, ratings_c, ratings_t, ratings_f)
                               newspaper2name['corriere'],
                               newspaper2name['tuttosport'],
                               newspaper2name['fantagazzetta']],
-               fontsize=30)
-    plt.yticks(fontsize=20)
+               fontsize=20)
+    plt.yticks(fontsize=15)
     ax.yaxis.get_major_ticks()[3].label1.set_fontweight('bold')
     ax.yaxis.get_major_ticks()[3].label1.set_fontsize('25')
 
@@ -355,7 +361,7 @@ def plotViolinPlotNewspaperDistribution(ratings_g, ratings_c, ratings_t, ratings
     plt.show()
 
 
-def correlation_newspapers(orig_x, orig_y, name1, name2, plot_type='scatter', concordance=None):
+def correlation_newspapers(orig_x, orig_y, name1, name2,plot_type='scatter', concordance=None):
     '''
 
     :param orig_x: list of ratings of a newspaper
@@ -380,7 +386,13 @@ def correlation_newspapers(orig_x, orig_y, name1, name2, plot_type='scatter', co
         else:
             x.append(a)
             y.append(b)
-
+            
+    number_of_agreements = 0
+    tott = len(orig_x)
+    for a, b in zip(orig_x, orig_y):
+        if (a >= 6 and b >= 6) or (a < 6 and b < 6):
+            number_of_agreements += 1
+    print(number_of_agreements/tott)
     # compute max error
     diffs = []
     for a, b in zip(x, y):
@@ -397,7 +409,7 @@ def correlation_newspapers(orig_x, orig_y, name1, name2, plot_type='scatter', co
         sc = plt.scatter(x, y, s=(z * 150) + 20, linewidth=0.1, zorder=1, marker='o', alpha=0.2, norm=LogNorm())
     else:
         bb = [len(np.arange(min(x), max(x) + 0.5, 0.5)), len(np.arange(min(y), max(y) + 0.5, 0.5))]
-        plt.hist2d(x, y, bins=bb, density=False, norm=LogNorm(), alpha=0.7)
+        plt.hist2d(x, y, bins=bb, normed=False, norm=LogNorm(), alpha=0.7)
         # plt.colorbar(pad=0.01)
 
     plt.plot([0, 10], [0, 10], color='k', alpha=0.5)
@@ -431,11 +443,12 @@ def correlation_newspapers(orig_x, orig_y, name1, name2, plot_type='scatter', co
     plt.fill_between([6, 10], 6, color='k', alpha=0.05, label='disagreement')
     plt.fill_between([0, 6], 6, 10, color='k', alpha=0.05)
     plt.legend(loc=3, fontsize=18, frameon=True, shadow=True, handletextpad=0.2)
+    #plt.title('%s' %tit, fontsize=25)
     plt.grid(alpha=0.2)
     fig.tight_layout()
     plt.savefig('img/corr_ratings_%s_%s.png' % (name1, name2))
     plt.savefig('img/corr_ratings_%s_%s.svg' % (name1, name2))
-    plt.savefig('img/corr_ratings_%s_%s.png' % (name1, name2))
+    plt.savefig('img/corr_ratings_%s_%s.pdf' % (name1, name2))
     plt.show()
 
 
@@ -451,20 +464,43 @@ def plotHistogramRoleMarkDistribution(midfielder, forward, defence, goalkeeper, 
     '''
     # Assign colors for each role and the names
     colors = ['#E69F00', '#56B4E9', '#D55E00', '#009E73']
-    names = ['Midfielder', 'Forward', 'Defence', 'Goalkeeper']
+    names = ['Mid', 'For', 'Def', 'Gk']
 
     fig = plt.figure(figsize=figsize)
+    ax = plt.axes()
     # Make the histogram using a list of lists
     # Normalize the flights and assign colors and names
-    plt.hist([midfielder, forward, defence, goalkeeper], bins=int(180 / 15), density=True,
-             color=colors, label=names)
-
+    plt.hist([midfielder, forward, defence, goalkeeper], bins=int(180 / 15), normed=True,
+             color=colors, label=names, width=0.15)  
+    
     # Plot formatting
-    plt.legend()
-    plt.xlabel(newspaperName)
-    plt.ylabel('Normalized Performances')
-    plt.title('Side-by-Side Histogram with Multiple Roles')
-    plt.savefig('img/roles_mark_distribution.png')
+    plt.legend(fontsize=18, frameon=True, shadow=True, handletextpad=0.2, loc='upper left')
+    plt.grid(alpha=0.2)
+    plt.xlabel(newspaperName, fontsize=label_size)
+    plt.ylabel('P(%s)' %newspaperName, fontsize=label_size,labelpad = 15)
+    to_show = ['3', '', '4', '', '5', '', '6', '', '7', '', '8','','9']
+    #positions = [3,3.3,3.9,4.47,5.05,5.65,6.2,6.8,7.4,7.95,8.55]
+    positions = [3.25,3.75,4.25,4.75,5.25,5.75,6.25,6.75,7.25,7.75,8.25,8.75,9.3]
+    plt.xticks(positions, to_show, fontsize=20)
+    #plt.xticks(range(3, 9), fontsize=20)
+    plt.yticks(fontsize=15)
+    
+    ax.xaxis.get_major_ticks()[7].label1.set_fontsize(30)
+    ax.xaxis.get_major_ticks()[7].label1.set_fontweight('bold')
+
+    for i in [5, 9]:
+        ax.xaxis.get_major_ticks()[i].label1.set_fontsize(25)
+        ax.xaxis.get_major_ticks()[i].label1.set_fontweight('bold')
+
+    for i in [4, 12]:
+        ax.xaxis.get_major_ticks()[i].label1.set_fontsize(20)
+        
+    ax.xaxis.get_major_ticks()[6].label1.set_fontweight('bold')
+    ax.xaxis.get_major_ticks()[6].label1.set_fontsize(30)
+    ax.set_xlim(3,9)
+    #plt.title('Histogram with Multiple Roles', fontsize=title_size - 5)
+    plt.tight_layout()
+    plt.savefig('img/roles_mark_distribution.pdf')
     plt.show()
 
 
@@ -490,32 +526,32 @@ def plotViolinPlotRolesMarkDistribution(midfielder, forward, defence, goalkeeper
     for pc in bp['bodies']:
         pc.set_facecolor('w')
         pc.set_edgecolor('#E69F00')
-        pc.set_alpha(0.75)
-        pc.set_linewidth(2)
+        #pc.set_alpha(1)
+        pc.set_linewidth(3)
 
     bp = plt.violinplot(forward, showextrema=False, vert=vert)
     for pc in bp['bodies']:
         pc.set_facecolor('w')
         pc.set_edgecolor('#56B4E9')
-        pc.set_alpha(0.5)
-        pc.set_linewidth(2)
+        #pc.set_alpha(1)
+        pc.set_linewidth(3)
 
     bp = plt.violinplot(defence, showextrema=False, vert=vert)
     for pc in bp['bodies']:
         pc.set_facecolor('w')
         pc.set_edgecolor('#D55E00')
-        pc.set_alpha(0.8)
-        pc.set_linewidth(2)
+        #pc.set_alpha(1)
+        pc.set_linewidth(3)
 
     bp = plt.violinplot(goalkeeper, showextrema=False, vert=vert)
     for pc in bp['bodies']:
         pc.set_facecolor('w')
         pc.set_edgecolor('#009E73')
-        pc.set_alpha(0.5)
-        pc.set_linewidth(2)
+        #pc.set_alpha(0.5)
+        pc.set_linewidth(3)
 
     to_show = ['2', '', '3', '', '4', '', '5', '', '6', '', '7', '', '8', '', '9', '', '10']
-    plt.xticks(np.arange(2, 10.5, 0.5), to_show, fontsize=15)
+    plt.xticks(np.arange(2, 10.5, 0.5), to_show, fontsize=20)
     plt.yticks([])
 
     ax.xaxis.get_major_ticks()[8].label1.set_fontsize(30)
@@ -540,11 +576,11 @@ def plotViolinPlotRolesMarkDistribution(midfielder, forward, defence, goalkeeper
 
     # Create legend from custom artist/label lists
     plt.legend([midfielder_artist, forward_artist, defence_artist, gk_artist],
-               ['$Mid$', '$For$', '$Def$', '$Gk$'], fontsize=20, loc=2, shadow=True, frameon=True,
+               ['$Mid$', '$For$', '$Def$', '$Gk$'], fontsize=18, loc=2, shadow=True, frameon=True,
                handletextpad=0.1, handlelength=1)
 
-    plt.xlabel('ratings', fontsize=label_size)
-    plt.title('Ratings Distribution by Role for %s' % newspaperName, fontsize=20)
+    plt.xlabel('%s Ratings' %newspaperName, fontsize=label_size)
+    #plt.title('Ratings Distribution by Role for %s' % newspaperName, fontsize=20)
 
     plt.grid(alpha=0.60, which='major', )
     fig.tight_layout()
@@ -589,9 +625,9 @@ def boxplotCorrelationWinFinalMark(wingazzetta, notwingazzetta, winfanta, notwin
 
     # Hide these grid behind plot objects
     ax1.set_axisbelow(True)
-    ax1.set_title('Comparison of Winning Distribution and Not Winning Ones', fontsize=14)
-    ax1.set_xlabel('Final Result')
-    ax1.set_ylabel('Scores')
+    #ax1.set_title('Comparison of Winning Distribution and Not Winning Ones', fontsize=14)
+    ax1.set_xlabel('Final Result', fontsize=label_size)
+    ax1.set_ylabel('Scores', fontsize=label_size, labelpad=15)
 
     # Now fill the boxes with desired colors
     box_colors = ['darkkhaki', 'royalblue']
@@ -627,7 +663,7 @@ def boxplotCorrelationWinFinalMark(wingazzetta, notwingazzetta, winfanta, notwin
     bottom = 0
     ax1.set_ylim(bottom, top)
     ax1.set_xticklabels(np.repeat(random_dists, 1),
-                        rotation=45, fontsize=10)
+                        rotation=35, fontsize=17, ha='right')
     # y management
     pos = np.arange(num_boxes) + 1
     upper_labels = [str(np.round(s, 2)) for s in medians]
@@ -636,23 +672,25 @@ def boxplotCorrelationWinFinalMark(wingazzetta, notwingazzetta, winfanta, notwin
         k = tick % 2
         ax1.text(pos[tick], .95, upper_labels[tick],
                  transform=ax1.get_xaxis_transform(),
-                 horizontalalignment='center', size='medium',
+                 horizontalalignment='center', size='x-large',
                  weight=weights[k], color=box_colors[k])
 
     # Finally, add a basic legend
-    fig.text(0.80, 0.08, 'Winner',
+    fig.text(0.75, 0.48, 'Winner',
              backgroundcolor=box_colors[0], color='black', weight='roman',
              size='medium')
-    fig.text(0.80, 0.045, 'Not Winner',
+    fig.text(0.75, 0.445, 'Not Winner',
              backgroundcolor=box_colors[1],
              color='white', weight='roman', size='medium')
-    fig.text(0.80, 0.010, '*', color='white', backgroundcolor='silver',
+    fig.text(0.75, 0.410, '*', color='white', backgroundcolor='silver',
              weight='roman', size='medium')
-    fig.text(0.815, 0.013, ' Average Value', color='black', weight='roman',
+    fig.text(0.765, 0.413, ' Average Value', color='black', weight='roman',
              size='medium')
-    plt.xlabel('Final Result', fontsize=12)
-    plt.ylabel('Marks', fontsize=12)
-    plt.savefig('img/relation_win_mark.png')
+    plt.xlabel('Match Outcome', fontsize=label_size)
+    plt.ylabel('Ratings (G, F)', fontsize=label_size, labelpad=15)
+    plt.yticks(fontsize=15)
+    plt.tight_layout()
+    plt.savefig('img/relation_win_mark.pdf')
     plt.show()
 
 
@@ -772,7 +810,7 @@ def createDataframeForMarkEvolution(df, metrics):
     return series
 
 
-def scatterPlayerEvolution(series, ids):
+def scatterPlayerEvolution(series, ids,name,season):
     '''
     Plot in a fancy way the player evolution for the gameweek in a season
     :param series: the pandas dataframe structured as row the gaemweek, columns the player ids and in the cells
@@ -786,21 +824,27 @@ def scatterPlayerEvolution(series, ids):
     x = list(map(int, x))
     y = series[ids]
     y = list(map(float, y))
-    plt.figure(figsize=(8, 6), dpi=80)
+    plt.figure(figsize=(12, 6))
 
     ev = plt.stem(x, y, markerfmt=' ', linefmt='grey')
     ev = plt.scatter(x, y, color='red')
 
     ymax = max(y)
     indices = find(y, ymax)
+    i = 0
     for el in indices:
-        plt.scatter(el, ymax, s=100, color='orange', marker='*')
-    plt.xticks(x)
+        plt.scatter(el, ymax, s=400, color='orange', marker='*', label='Best Perfomance' if i == 0 else '_nolegend_')
+        i = 1
+    plt.xticks(x, fontsize=15)
+    plt.yticks([0,2,4,6,8,10], fontsize=15)
     plt.ylim(0, 10)
-    plt.annotate('0 values mean not played game', xy=(0, 9.75))
-    plt.ylabel('Performance')
-    plt.xlabel('Gameweek')
-
+    plt.annotate('0 values indicate matches not player', xy=(0, 9.5), fontsize=15)
+    plt.ylabel('G Ratings of %s' %name, fontsize=label_size, labelpad=15)
+    plt.xlabel('Gameweek season %s' %season, fontsize=label_size)
+    plt.legend()
+    plt.grid(alpha=0.25)    
+    plt.tight_layout()
+    plt.savefig('img/performance_evolution.pdf')
     plt.show()
 
 
@@ -954,24 +998,29 @@ def plotAveragePerfomanceForPlayerSets(randomicity, lessSet, midSet, highSet, me
         midValues.append(float(midDict[key]['marks'] / midDict[key]['count']))
     for key in highDict:
         highValues.append(float(highDict[key]['marks'] / highDict[key]['count']))
-    plt.figure(figsize=(8, 6), dpi=80)
+    plt.figure(figsize=(6, 6), dpi=80)
 
     plt.axhline(y=min(lessValues), color='lightblue', linestyle='-')
-    plt.scatter(days, lessValues, color='lightblue', label='Less Perfomances')
+    plt.scatter(days, lessValues, color='lightblue', label='Low')
     plt.axhline(y=max(lessValues), color='lightblue', linestyle='-')
 
-    plt.axhline(y=min(midValues), color='yellow', linestyle='-')
-    plt.scatter(days, midValues, color='yellow', label='Mid Performances')
-    plt.axhline(y=max(midValues), color='yellow', linestyle='-')
+    plt.axhline(y=min(midValues), color='green', linestyle='-')
+    plt.scatter(days, midValues, color='green', label='Medium')
+    plt.axhline(y=max(midValues), color='green', linestyle='-')
 
     plt.axhline(y=min(highValues), color='red', linestyle='-')
-    plt.scatter(days, highValues, color='red', label='High Performances')
+    plt.scatter(days, highValues, color='red', label='High')
     plt.axhline(y=max(highValues), color='red', linestyle='-')
 
-    plt.xlabel('Gameweek')
-    plt.ylabel('Mean %s Score in Gameweek' % metrics)
-    plt.title('Mean Performance Per Player Category')
-    plt.legend(loc='top')
+    plt.xlabel('Gameweek', fontsize= label_size)
+    plt.ylabel('Mean %s Rating' % metrics[0].upper(), fontsize = label_size, labelpad=15)
+    plt.xticks([0,5,10,15,20,25,30,35,40], fontsize=20)
+    plt.yticks([5.6,5.8,6.0,6.2,6.4,6.6],fontsize=15)
+    #plt.title('Mean Performance Per Player Category')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.10), fontsize=12,frameon=True, shadow=True, handlelength=1.6, handletextpad=0.4, ncol=3)
+    plt.tight_layout()
+    plt.savefig('img/category_performance.pdf')
+    plt.show()
 
 
 def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
@@ -1101,7 +1150,7 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
         occurencesShuffled = meanVal
         '''
         # Draw Plot
-        plt.figure(figsize=(12, 6), dpi=80)
+        plt.figure(figsize=(12, 6))
         plt.plot(days, occurences, color='tab:blue', label='Fisrt Best Perfromances')
         plt.plot(days, occurencesShuffled, color='grey', label='Randomized First Best Perfomance', linestyle='dashed')
         ymax = max(occurences)
@@ -1114,11 +1163,12 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
             plt.scatter(el, ymaxShuffled - 0.02, marker=mpl.markers.CARETUPBASE, color='grey', s=100,
                         label='Random Peaks')
         # Decoration
-        plt.title("Distribution of First Best Performances of %s score in Gameweeks" % metrics, fontsize=22)
-        plt.yticks(fontsize=12, alpha=.7)
+        #plt.title("Distribution of First Best Performances of %s score in Gameweeks" % metrics, fontsize=22)
+        plt.yticks(fontsize=15)
+        plt.xticks(fontsize = 20)
         plt.ylim(0, 1)
-        plt.xlabel('Gameweek')
-        plt.ylabel('Normalized Number of Best Performances')
+        plt.xlabel('Gameweek', fontsize=label_size)
+        plt.ylabel('Normalized Best Performances', fontsize = label_size)
 
         # Lighten borders
         plt.gca().spines["top"].set_alpha(.0)
@@ -1126,8 +1176,10 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
         plt.gca().spines["right"].set_alpha(.0)
         plt.gca().spines["left"].set_alpha(.3)
 
-        plt.legend(loc='upper right')
+        plt.legend(fontsize=15, frameon=True, shadow=True, handlelength=1.6, handletextpad=0.4, loc='upper right')
         plt.grid(axis='y', alpha=.3)
+        plt.tight_layout()
+        plt.savefig('img/comparison_real_random.pdf')
         plt.show()
 
         print('DTW computation between the two time series..')
@@ -1147,6 +1199,8 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
 
         plt.imshow(acc_cost_matrix.T, origin='lower', cmap='inferno', interpolation='nearest')
         plt.plot(path[0], path[1], 'w')
+        plt.tight_layout()
+        plt.savefig('img/comparison_real_random_dtw.pdf')
         plt.show()
     else:
         # computation to retrive first best performance for player for each gameweek
@@ -1288,12 +1342,13 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
         for el in indicesShuffled:
             plt.scatter(el, ymaxShuffled - 0.02, marker=mpl.markers.CARETUPBASE, color='grey', s=100,
                         label='Random Peaks')
-        # Decoration
-        plt.title("Distribution of First Best Performances of %s score in Gameweeks" % metrics, fontsize=22)
-        plt.yticks(fontsize=12, alpha=.7)
+       # Decoration
+        #plt.title("Distribution of First Best Performances of %s score in Gameweeks" % metrics, fontsize=22)
+        plt.yticks(fontsize=15)
+        plt.xticks(fontsize = 20)
         plt.ylim(0, 1)
-        plt.xlabel('Gameweek')
-        plt.ylabel('Normalized Number of Best Performances')
+        plt.xlabel('Gameweek', fontsize=label_size)
+        plt.ylabel('N. Best Performances', fontsize = label_size)
 
         # Lighten borders
         plt.gca().spines["top"].set_alpha(.0)
@@ -1301,8 +1356,10 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
         plt.gca().spines["right"].set_alpha(.0)
         plt.gca().spines["left"].set_alpha(.3)
 
-        plt.legend(loc='upper right')
+        plt.legend(fontsize=15, frameon=True, shadow=True, handlelength=1.6, handletextpad=0.4, loc='upper right')
         plt.grid(axis='y', alpha=.3)
+        plt.tight_layout()
+        plt.savefig('img/comparison_real_random.pdf')
         plt.show()
 
         print('DTW computation between the two time series..')
@@ -1320,9 +1377,16 @@ def distributionRandomEvolutionVsOriginalDistribution(series, metrics, run):
 
         print('Only insertion Cost is keep..')
         print('Reallignment Cost :' + str(d))
-
+        
+        plt.figure(figsize=(8,8))
         plt.imshow(acc_cost_matrix.T, origin='lower', cmap='inferno', interpolation='nearest')
         plt.plot(path[0], path[1], 'w')
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=15)
+        plt.ylabel('Best Performance Shuffled', fontsize=label_size)
+        plt.xlabel('Best Performance Original', fontsize=label_size)
+        plt.tight_layout()
+        plt.savefig('img/comparison_real_random_dtw.pdf')
         plt.show()
 
 
@@ -2012,3 +2076,43 @@ def plotBeforeandAfterHighestImpactInEachPlayerCategory(series, n0, upperValue, 
     plt.legend(loc='upper left')
     plt.grid(axis='y', alpha=.3)
     plt.show()
+
+def table_statistics(df):
+    '''
+    compute r, ks and RMSE for role for newspaper couples
+    
+    Param:
+        df
+    Return:
+        dictionary with results
+    '''
+    data = {}
+    for roles in ['A', 'C', 'D', 'P']:
+        data[roles] = {}
+        for new1 in ['fantacalcio_score', 'corriere_score', 'tuttosport_score','gazzetta_score']:
+            data[roles][new1] = {}
+            for new2 in ['fantacalcio_score', 'corriere_score', 'tuttosport_score','gazzetta_score']:
+                if(new1 != new2):
+                    x = df[df['player_role_newspaper'] == roles][new1]
+                    y = df[df['player_role_newspaper'] == roles][new2]
+                    pearson, pvalue = pearsonr(x, y)
+                    rmse_val = round(sqrt(mean_squared_error(x, y)), 3)
+                    ks = round(ks_2samp(x, y)[0],3)
+                    
+                    number_of_agreements = 0
+                    tott = len(x)
+                    for a, b in zip(x, y):
+                        if (a >= 6 and b >= 6) or (a < 6 and b < 6):
+                            number_of_agreements += 1
+                    perc_agr = number_of_agreements/tott
+                    perc_dis = 1 - perc_agr
+                    
+                    data[roles][new1][new2] = {}
+                    data[roles][new1][new2]['r'] = round(pearson,3)
+                    data[roles][new1][new2]['ks'] = ks
+                    data[roles][new1][new2]['RMSE'] = rmse_val
+                    data[roles][new1][new2]['disagreement'] = round(perc_dis,3)
+                    
+    return data
+                    
+                    
