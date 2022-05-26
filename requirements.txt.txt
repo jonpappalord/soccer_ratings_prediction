@@ -20,7 +20,7 @@ textdistance==4.2.0
 torch==1.5.0
 torchvision==0.6.0
 tqdm==4.42.1
-ujson==1.35
+ujson==5.2.0
 unicodecsv==0.14.1
 Unidecode==1.1.1
 xgboost==1.1.0
