@@ -1,7 +1,7 @@
 dtw==1.4.0
 eli5==0.10.1
 ipywidgets==7.5.1
-joblib==0.14.1
+joblib==1.2.0
 json5==0.9.1
 Keras==2.3.1
 Keras-Applications==1.0.8
