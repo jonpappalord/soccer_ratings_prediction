@@ -13,7 +13,7 @@ shap==0.35.0
 skater==1.0.2
 statsmodels==0.11.0
 tensorboard==2.1.1
-tensorflow==2.1.0
+tensorflow==2.11.1
 tensorflow-estimator==2.1.0
 tensorflow-probability==0.9.0
 textdistance==4.2.0
