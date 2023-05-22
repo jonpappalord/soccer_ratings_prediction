@@ -7,7 +7,7 @@ Keras==2.3.1
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.0
 mord==0.6
-requests==2.22.0
+requests==2.31.0
 scikit-learn==0.22.1
 shap==0.35.0
 skater==1.0.2
